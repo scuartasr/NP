@@ -1,0 +1,567 @@
+---
+title: "Ejercicios de estadística no paramétrica"
+header-includes:
+   - \usepackage{cmbright}
+   - \usepackage[OT1]{fontenc}
+   - \usepackage{xfrac}
+   - \usepackage{cancel}
+   - \usepackage{babel}[spanish]
+author: "Simón Cuartas Rendón"
+date: "Septiembre 28 de 2022"
+output:
+  pdf_document:
+    extra_dependencies: ["xfrac"]
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Punto uno
+
+* ***Enunciado.*** En un juego se lanzó un par de datos 180 veces, de las cuales se produjo el evento 'siete' 38 veces. Si los datos no están cargados, la probabilidad de sacar 'siete' es 1/6, mientras que si se cargan, la probabilidad es mayor. ¿Hay evidencia muestral para sugerir que los datos están cargados?***
+
+En este caso es razonable emplear el ***test binomial***, ya que se desea realizar inferencia sobre una proporción o una probabilidad, y es que esta situación puede verse como un experimento binomial, en donde se realizan $X_1, \ X_2, \ \dots, \ X_{180}$ lanzamientos de dos dados (ensayos Bernoulli), cada uno de estos independientes entre sí, siendo el evento de interés que la suma de los puntos resultantes en las caras superiores de los dados sea siete, de tal suerte que en el caso de dos dados no cargados esta probabilidad es de $P^* =1/6$, de forma que esta última probabilidad se puede considerar como la probabilidad de éxito. En ese sentido, se cumple que $X_i \sim Bernoulli(p = 1/6), \ i = 1,  \ 2, \ \dots, 180$, y por tanto, se puede definir la variable aleatoria $Y$ binomial asociada a estas variables aleatorias Bernoulli como $Y \sim Binomial(n = 180, \ p = 1/6)$. Así pues, sea $P$ la probabilidad de obtener un 'siete' al lanzar los dos dados usados en el juego.
+
+* **Hipótesis.**
+
+$$
+\begin{cases}
+        H_0: \ P = \frac{1}{6} \\
+        H_1: \ P > \frac{1}{6}
+    \end{cases}
+$$
+
+Nótese que se está considerando un test de cola izquierda ya que el enunciado indica que si los dados están cargando, la probabilidad de obtener un siete es mayor a 1/6, y esto es justamente lo que se quiere probar.
+
+* **Estadística de prueba.** Sea T la estadística de prueba para este test y $O_1$ el número de éxitos observados en el ensayo (o el juevo). Así, se tiene:
+
+$$T = O_1$$
+
+* **Región crítica.**
+
+$$R_c = \{ T: \ T > t \},  \ donde ~t~es~tal~que~ P(Y > t) \leq \alpha, ~donde~ Y \sim Binomial(180, 1/6)$$
+Y como $n = 180 > 20$, entonces el valor p $V_p$ asociado está dado por:
+
+$$
+V_p \approx Pr 
+\left(
+Z \geq \frac{T_{obs} - n P ^* + 0.5}{\sqrt{ n P ^* (1 - P^*)}}
+\right)
+$$
+* **Cálculos.** Así pues, se va a considerar un nivel de significancia de $\alpha = 0.05$. Así, se va a comenzar hallando el $t$ de la región crítica, teniendo entonces que:
+
+```{r}
+t <- qbinom(0.05, 180, 1/6, lower.tail = FALSE); t
+```
+
+$$R_c = \{ T: \ T \leq `r t` \}$$
+Pero se tiene que $T_{obs} = O_1 = 38$, y como es falso que $T_{obs} = 38 > 38 = t$, entonces no se está en la región crítica, por lo que no se rechaza la hipótesis nula. De igual forma, usando el valor p:
+
+```{r}
+# Parámetros
+t_obs <- 38
+n <- 180
+p_star <- 1/6
+
+# Probabilidad
+z_calc <- (t_obs - n * p_star + 0.5) / sqrt(n * p_star * (1 - p_star))
+Vp <- pnorm(z_calc, mean = 0, sd = 1, lower.tail = FALSE)
+Vp
+```
+ 
+Como se puede ver, se tiene que $V_p = `r round(Vp, 2)` < \alpha = 0.05$. Se tiene entonces una situación contradictoria entre la estadística de prueba y el valor p. Nótese que esto se debe a que se está en una situación límite. En este caso es razonable considerar que los dados no están cargados, esto es no, no rechazar la hipótesis nula, ya que típicamente se considera que cometer el error tipo I (rechazar la hipótesis nula cuando debería hacerse) es peor que el error tipo II (no rechazar la hipótesis nula cuando no debería hacerse).
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```** de $\color{blue}{\textsf{R}}$, como se observa enseguida:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 38        # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 180      # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 1/6 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'greater')
+```
+Al realizar la implementación en R, se puede observar que el valor p obtenido es $V_p = 0.06997 > 0.05 = \alpha$, con lo que se rechazaría la hipótesis nula y se concluiría que hay evidencia muestral suficiente para sugerir que los dados están cargados con una significancia del cinco por ciento. Con esto, se debe notar que el valor p obtenido con la implementación en R es ligeramente mayor al calculado manualmente, lo cual se puede deber al hecho que R tiene algoritmos que pueden derivar en respuestas numéricas distintas. No obstante, se sigue está en la frontera de rechazo, y es importante notar que el intervalo de confianza al 95 % obtenido para P es $(0.1622, \ 1)$, por lo que $1/6$ está incluido en el intervalo de confianza y se podría concluir lo mismo que cuando se realizó la prueba teórica.
+
+# Punto dos
+
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+- ***Enunciado.*** Un grupo de personas reportó al consejo del pueblo que por lo menos el 60 % de los residentes del pueblo estaban a favor de la emisión de un bono. El consejo del pueblo tomó una muestra aleatoria de cien personas y les preguntó si estaban a favor o no de la emisión del bono, a lo que 48 personas dijeron que sí. ¿Es el reporte del grupo cívico razonable? Usar $\alpha = 0.05$ e interpretar.
+
+En este caso es nuevamente adecuado emplear el ***test binomial***, ya que se desea realizar inferencia sobre una proporción o una probabilidad, y es que esta situación puede verse como un experimento binomial, en donde se realizan $X_1, \ X_2, \ \dots, \ X_{100}$ cuestionarios a ciudadanos del pueblo(experimentos Bernoulli), cada uno de estos independientes entre sí, siendo el evento de interés que los ciudadanos respondan de forma afirmativa a la pregunta asociada a la emisión del bono, siendo la afirmación del grupo de ciudadanos que esto sucederá un $P^* = 6/10 = 60 %$ de las veces, de forma que esta última probabilidad se puede considerar como la probabilidad de éxito. En ese sentido, se cumple que $X_i \sim Bernoulli(p = 6/10), \ i = 1,  \ 2, \ \dots, 100$, y por tanto, se puede definir la variable aleatoria $Y$ binomial asociada a estas variables aleatorias Bernoulli como $Y \sim Binomial(n = 100, \ p = 6/10)$. Así pues, sea $P$ la probabilidad de que un ciudadano diga que sí está de acuerdo con la emisión del bono en el pueblo.
+
+* **Hipótesis.**
+
+$$
+\begin{cases}
+        H_0: \ P \leq 0.6 \\
+        H_1: \ P > 0.6
+    \end{cases}
+$$
+
+Nótese que se está considerando un test de cola izquierda ya que el enunciado indica que el grupo cívico dice que *al menos* el 60 % de la ciudadanía del pueblo está a favor de la emisión del bono.
+
+* **Estadística de prueba.** Sea T la estadística de prueba para este test y $O_1$ el número de éxitos observados en el ensayo (o el juevo). Así, se tiene:
+
+$$T = O_1$$
+
+* **Región crítica.**
+
+$$R_c = \{ T: \ T > t \},  \ donde ~t~es~tal~que~ P(Y > t) \leq \alpha, ~donde~ Y \sim Binomial(100, 60)$$
+Y como $n = 100 > 20$, entonces el valor p $V_p$ asociado está dado por:
+
+$$
+V_p \approx Pr 
+\left(
+Z \geq \frac{T_{obs} - n P ^* + 0.5}{\sqrt{ n P ^* (1 - P^*)}}
+\right)
+$$
+
+* **Cálculos.** Así pues, se va a considerar un nivel de significancia de $\alpha = 0.05$. Así, se va a comenzar hallando el $t$ de la región crítica, teniendo entonces que:
+
+```{r}
+t <- qbinom(0.05, 100, 0.6, lower.tail = FALSE); t
+```
+
+$$R_c = \{ T: \ T \leq `r t` \}$$
+Pero se tiene que $T_{obs} = O_1 = 48$, y dado que $T_{obs} = 48 < 68 = t$, entonces no se está en la región crítica, lo que implica que no se rechaza la hipótesis nula. De igual forma, usando el valor p:
+
+```{r}
+# Parámetros
+t_obs <- 48
+n <- 100
+p_star <- 0.6
+
+# Probabilidad
+z_calc <- (t_obs - n * p_star + 0.5) / sqrt(n * p_star * (1 - p_star))
+Vp <- pnorm(z_calc, mean = 0, sd = 1, lower.tail = FALSE)
+Vp
+```
+ 
+Como se puede ver, se tiene que $V_p = `r round(Vp, 2)` > \alpha = 0.05$, coincidiendo con la conclusión de la estadística de prueba en cuanto a no rechazar la hipótesis nula, pudiendo determinar pues que *no* existe evidencia muestral suficiente para sugerir que la proporción de ciudadanos que está a favor de la emisión del bono sea mayor a (o por lo menos del) 60 %, de forma que la afirmación del grupo de ciudadanos **carece de sustento estadístico**.
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```** de $\color{blue}{\textsf{R}}$, como se observa enseguida:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 48        # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 100      # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 0.6 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'greater')
+```
+Con esto pues, se obtiene que el valor p del test binomial de cola superior realizado es $V_p = 0.9942 > 0.05 = \alpha$, que es similar a lo obtenido anteriormente, por lo que se concluye de nuevo, con una significancia del $5 %$, que no hay evidencia muestral suficiente para respaldar la declaración realizada por el grupo de personas al Concejo del pueblo en cuanto a que al menos seis de cada diez vecinos del territorio estaban a favor de la emisión de un bono.
+
+# Punto tres
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+
+- **Enunciado.** El tiempo de reacción antes del almuerzo fue comparado con el tiempo de reacción después del almuerzo con un grupo de veintiocho trabajadores de oficina, de los cuales 22 tuvieron una reacción más carota antes del almuerzo y dos no presentaron diferencias. ¿Es el tiempo de reacción antes del almuerzo significativamente más corto que el tiempo de reacción después del almuerzo? Usar $\alpha = 0.1$ e interpretar.
+
+Se quiere estudiar si se tiene un cambio significativo luego de los trabajadores han almorzado, por lo que se puede emplear el ***test del signo***. Así, se tienen 28 observaciones de una muestra aleatoria bivariada, es decir, $(X_1, \ Y_1), \ \dots, \ (X_{28}, \ Y_{28})$, donde $X_i$ se asocia al tiempo de reacción del $i$-ésimo trabajador muestreado antes del almuerzo y $Y_i$ con el tiempo de reacción del $i$-ésimo trabajador muestreado después del almuerzo, con $i = 1, \ \dots, \ 28$. Así pues, siguiendo la notación del test del signo, para cada par $(X_i, \ Y_i)$ se clasificará al par como "$+$" si $X_i < Y_i$, como "$-$" si $X_i > Y_i$ y como "$0$" si $X_i = Y_i$.
+
+- **Hipótesis**
+
+Por lo tanto, si se quiere probar si el tiempo de reacción antes del almuerzo es significativamente más corto que el tiempo de reacción después del almuerzo, entonces las hipótesis a contrastar están dadas por:
+
+$$
+\begin{cases}
+        H_0: \ E[Y_i] \geq E[X_i] \ \forall \ (X_i, \ Y_i) \\
+        H_1: \ \exists \ i \ | \ E[Y_i] < E[X_i], \ i = 1, \dots, 28
+\end{cases}
+$$
+
+En la práctica, aceptar la hipótesis nula significa que los tiempos de reacción después del almuerzo son menores significativamente que los tiempos de reacción antes del almuerzo. 
+
+- **Estadística de prueba**
+
+Sea $T$ el estadístico de prueba, el cual denota el número total de pares que cumplen $X_i < Y_i$.
+
+- **Región crítica**
+
+Para definir la región crítica es importante tener en cuenta que de los veintiocho trabajadores muestreados, solo dos no presentaron diferencias, por lo que $n = 26 > 20$, de forma que para este test se va a considerar el valor p, el cual se define en este caso como:
+
+$$
+V_p = Pr(Y \leq T_{obs}), \ \ \ \ \ Y \sim Binomial(n, \sfrac{1}{2})
+$$
+
+- **Cálculos**
+
+```{r}
+# Parámetros para el cálculo del valor p ============================
+prob <- 1/2             # Probabilidad de 1/2 para el valor p
+n <- 26                 # X_i > Y_i, o bien, X_i < Y_i
+t_obs <- 22             # Reacción más corta antes del almuerzo
+
+# Cálculo del valor p ===============================================
+V_p <- pbinom(q = t_obs, size = n, prob = prob, lower.tail = TRUE)
+V_p
+```
+
+Se obtiene pues que $V_p = 0.999956 > 0.1 = \alpha$, por lo que ***no*** se rechaza la hipótesis nula, lo que implica que hay evidencia muestral suficiente para sugerir, con una significancia del diez por ciento, que los tiempos de reacción de los trabajadores después del almuerzo son mayores que antes del almuerzo.
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```* de $\color{blue}{\textsf{R}}$, ya que el test del signo se puede ver como un caso particular del test binomial, llegando al siguiente resultado:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 22        # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 28       # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 0.5 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'less')
+```
+Nótese que el valor p en este caso es $V_p = 0.9995 > 0.10 = \alpha$, por lo que el resultado es consistente con el obtenido de forma manual.
+
+# Punto cuatro
+
+- **Enunciado.** Seis estudiantes se sometieron a una dieta para bajar de peso, obteniendo los resultados que se muestran en la tabla uno.
+
+| Nombre            | Laura | Pablo | Sara | Juan | Carlos | Lina |
+|-------------------|-------|-------|------|------|--------|------|
+| Peso antes [lb]   | 174   | 191   | 188  | 182  | 201    | 188  |
+| Peso después [lb] | 165   | 186   | 183  | 178  | 203    | 181  |
+
+: Masa (coloquialmente *peso*) de los estudiantes en libras antes y después de someterse a la dieta para bajar de peso.
+
+| ¿Es la dieta un medio efectivo para perder peso? Usar $\alpha = 0.05$ e interpretar$.
+
+Sea $X_i$ la masa del $i$-ésimo estudiante antes de someterse a la dieta y $Y_i$ la masa del mismo después después de haberse sometido a dicha dieta, con $i = 1, \ \dots,\ 6$. Vale la pena observar que se tiene una muestra aleatoria bivariada de la forma $(X_i, \ Y_i)$, y como se quiere estudiar si existen diferencias significativas entre las $X_i$ y las $Y_i$, entonces se puede usar de nuevo el ***test del signo***. Con esto en mente, se va a etiquetar como "$+$" a aquellos estudiantes cuya masa aumentó luego de la dieta, "$-$" a aquellos cuya masa disminuyó luego de la dieta y "$0$" a los estudiantes cuya masa sigue siendo la misma a pesar de haberse sometido a la dieta. De esta manera, la tabla uno puede ser modificada como se muestra en la tabla dos.
+
+| Nombre            | Laura | Pablo | Sara | Juan | Carlos | Lina |
+|-------------------|-------|-------|------|------|--------|------|
+| Peso antes [lb]   | 174   | 191   | 188  | 182  | 201    | 188  |
+| Peso después [lb] | 165   | 186   | 183  | 178  | 203    | 181  |
+| Signo             | $-$   | $-$   | $-$  | $-$  | $+$    | $-$  |
+
+: Masa de los estudiantes en libras antes y después de someterse a la dieta para bajar de peso y cambio: $+$ indica un aumento luego de la dieta y $-$ una disminución luego de la dieta.
+
+- **Hipótesis.** Como se quiere probar si la dieta es útil para bajar de peso, entonces se debe usar un test de cola derecha, por lo que el par de hipótesis a contrastar son:
+
+$$
+\begin{cases}
+        H_0: \ E[Y_i] \leq E[X_i] \ \forall \ (X_i, \ Y_i) \\
+        H_1: \ \exists \ i \ | \ E[Y_i] > E[X_i], \ i = 1, \dots, 6
+\end{cases}
+$$
+De manera que en la práctica, aceptar la hipótesis nula significa que la dieta es adecuada para conseguir que los estudiantes bajen de peso.
+
+- **Estadística de prueba**
+
+Sea $T$ el estadístico de prueba, el cual denota el número total de pares que cumplen $X_i > Y_i$.
+
+- **Región crítica**
+
+Para definir la región crítica es importante tener en cuenta que de los veintiocho trabajadores muestreados, solo dos no presentaron diferencias, por lo que $n = 26 > 20$, de forma que para este test se va a considerar el valor p, el cual se define en este caso como:
+
+$$
+V_p = Pr(Y \geq T_{obs}), \ \ \ \ \ Y \sim Binomial(n, \sfrac{1}{2})
+$$
+
+- **Cálculos**
+
+```{r}
+# Parámetros para el cálculo del valor p ==============================
+prob <- 1/2             # Probabilidad de 1/2 para el valor p
+n <- 6                  # X_i > Y_i, o bien, X_i < Y_i
+t_obs <- 5              # Reacción más corta antes del almuerzo
+
+# Cálculo del valor p =================================================
+V_p <- pbinom(q = (t_obs-1), size = n, prob = prob, lower.tail = FALSE)
+V_p
+```
+
+Se obtiene pues que $V_p = 0.109375 > 0.05 = \alpha$, por lo que no se rechaza la hipótesis nula, lo que implica que hay evidencia muestral suficiente para sugerir que la masa esperada del $i$-ésimo estudiante será menor luego de someterse a la dieta respecto a la mesa que tenía antes de, con una significancia del cinco por ciento. En la práctica esto implica que la dieta es un medio efectivo para perder peso.
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```* de $\color{blue}{\textsf{R}}$, ya que el test del signo se puede ver como un caso particular del test binomial, llegando al siguiente resultado:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 5         # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 6        # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 0.5 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'greater')
+```
+
+Y se obtiene pues que $V_p = 0.1094 > 0.05 = \alpha$, siendo el resultado consistente con el obtenido de forma manual, derivando pues la misma conclusión.
+
+# Punto cinco
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+
+- ***Enunciado.*** Se compararon dos aditivos para ver cuál mejora la durabilidad del concreto. Se mezclaron cien pequeños lotes de hormigón en diversas condiciones y durante la mezcla cada lote se dividió en dos partes: una parte recibió el aditivo $A$ y la otra parte recibió el aditivo $B$. Antes de que el concreto endureciera las dos partes en cada lote fueron aplastadas la una contra la otra y un observador determina cuál parte parece ser más duradera. En $77$ casos el concreto con el aditivo A fue evaluado más duradero y en $23$ casos fue evaluado como más duradero el concreto con aditivo $B$. ¿Hay alguna diferencia significativa entre los efectos de los dos aditivos? Usar $\alpha = 0.05$ e interpretar.
+
+Para responder la pregunta planteada se va a emplear ***la relación del test de McNemar*** con el test del signo. Para ello, se considerará que "$+$" representa el evento en que el concreto con el aditivo B se evalúa como más aditivo que el concreto con el aditivo A, "$-$" el caso opuesto y "$0$" cuando se presenta un empate.
+
+- **Hipótesis.**
+
+Teniendo en cuenta que se quiere probar si hay diferencia significativa entre el efecto de los dos aditivos para el concreto, y no determinar si uno es mayor o menor que el otro, entonces basta con emplear un test de dos colas. 
+
+$$
+\begin{cases}
+        H_0: \ Pr(+) = Pr(-) \ \forall \ (X_i, \ Y_i) \\
+        H_1: \ \exists \ i \ | \ Pr(+) \neq Pr(-), \ i = 1, \dots, 100
+\end{cases}
+$$
+
+- **Estadística de prueba**
+
+Es importante tener en cuenta que, de acuerdo con la información del enunciado, no hay empates o casos en los que los dos aditivos resulten en concretos con igual durabilidad, por lo que $n = 100$. Además, como el estadístico de prueba $T$ denota la cantidad de veces en las que el aditivo B está asociado a concretos con mayor durabilidad que los ligados al aditivo A, entonces $T = 23$.
+
+- **Regón crítica**
+
+Como $n = 100 > 20$, entonces se debe emplear el valor p como criterio de decisión para este test, que se define como:
+
+$$
+V_p = 2 \min \{ Pr(Y > T_{obs}), \ Pr(Y < T_{obs}) \}
+$$
+
+Así, se rechaza la hipótesis nula si $V_p < \alpha = 0.05$.
+
+- **Cálculos**
+
+```{r}
+# Parámetros para el cálculo del valor p ============================
+prob <- 1/2             # Probabilidad de 1/2 para el valor p
+n <- 100                 # X_i > Y_i, o bien, X_i < Y_i
+t_obs <- 23             # Reacción más corta antes del almuerzo
+
+# Cálculo del valor p ===============================================
+V_p1 <- pbinom(q = (t_obs-1), size = n, prob = prob, lower.tail = TRUE)
+V_p2 <- pbinom(q = t_obs, size = n, prob = prob, lower.tail = FALSE)
+V_p <- min(V_p1, V_p2)
+V_p
+```
+
+Como se observa, $V_p = 7.95 \times 10 ^{-9} < 0.05 = \alpha$, por lo que se rechaza la hipótesis nula, lo cual implica que no hay evidencia muestral suficiente para sugerir, con una significancia del cinco por ciento, que los efectos de los aditivos A y B son los mismos. En la práctica esto se toma como que los aditivos A y B tiene efectos diferentes significativamente.
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```* de $\color{blue}{\textsf{R}}$, ya que el test del signo se puede ver como un caso particular del test binomial, llegando al siguiente resultado:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 23         # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 100      # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 0.5 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'two.sided')
+```
+
+Y se obtiene pues que $V_p = 5.514 \times 10 ^{-8} < 0.05 = \alpha$, siendo el resultado consistente con el obtenido de forma manual, derivando pues la misma conclusión.
+
+# Punto seis
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+
+* **Enunciado.** A veintidós clientes en una tienda de comestibles se les preguntó por el gusto entre dos tipos de queso y estos declararon sus preferencias así: siete clientes prefirieron un tipo, doce clientes prefirieron el otro tipo y tres no tuvieron preferencia. ¿Esto indica una diferencia significativa en la preferencia de los dos tipos de queso? Usar un nivel de significancia de $\alpha = 0.05$ e interpretar.
+
+Para este ejercicio se va a etiquetar al queso que fue preferido por siete clientes como el queso $A$, mientras que aquel que gustó más a doce clientes se le catalogará como el queso $B$. Con esto presente, es posible emplear la ***relación entre los tests de McNemar y del signo*** para determinar si existe una diferencia significativa en la preferencia entre los quesos tipo $A$ y tipo $B$. 
+
+Para ello, se considerará que "$+$" representa el evento en que el queso tipo $B$ es más apeticido que el queso tipo $B$, "$-$" la situación contraria y "$0$" cuando se presenta un empate, que puede darse cuando no se prefiere ninguno de los quesos especialmente.
+
+- **Hipótesis.**
+
+Teniendo en cuenta que se quiere probar si hay diferencia significativa entre la preferencia hacia un tipo particular de queso, y no determinar si uno es más o menos preferido que el otro, entonces basta con emplear un test de dos colas, de forma que el juego de hipótesis es el que se muestra a continuación:
+
+$$
+\begin{cases}
+        H_0: \ Pr(+) = Pr(-) \ \forall \ (X_i, \ Y_i) \\
+        H_1: \ \exists \ i \ | \ Pr(+) \neq Pr(-), \ i = 1, \dots, 100
+\end{cases}
+$$
+
+- **Estadística de prueba**
+
+De acuerdo con la información del enunciado, el evento denotado con "$+$" sucede doce veces, el evento denotado con "$-$" ocurre en siete ocasiones y los empates se dan en tres veces. Además, como el estadístico de prueba $T$ denota la cantidad de veces en las que el queso tipo B es preferido sobre el queso tipo $A$, esto es, el evento "$+$", entonces $T = 12$. Por otro lado, se denota a $n$ como el número de veces en que no ocurre un empate o se elige un queso sobre otro, de tal suerte que $n = 12 + 7 = 19$.
+
+- **Regón crítica**
+
+Como $n = 19 < 20$, entonces se debe emplear la región crítica definida por la estadística de prueba como regla de decisión, la cual se define como sigue:
+
+$$
+R.C. = \{ T \ | \ T \leq n \ \ \ \lor \ \ \ T \geq n - t \}
+$$
+donde $t$ es el cuantil de una $Y \sim Binomial(n, \ \sfrac{1}{2})$ tal que $Pr(Y < t) \leq \sfrac{\alpha}{2}$
+
+- **Cálculos**
+
+Se va iniciar calculando el valor $t$:
+
+```{r}
+n <- 19
+prob <- 1/2
+alfa <- 0.05
+
+t <- qbinom((alfa/2), size = n, prob = 1/2, lower.tail = TRUE)
+t
+```
+
+Es decir, $t = 5$. Si bien $T = 12 < 14 = n-t$, se cumple que $T = 12 < 19$, por lo que se está en la región crítica, lo que implica que se debe rechazar la hipótesis nula. Así, se tiene que no hay evidencia muestral suficiente para sugerir que la preferencia por los quesos tipo $A$ y tipo $B$ es la misma, con una significancia del cinco por ciento, lo que en la práctica significa que uno de los dos tipos de queso es más preferido que el otro. 
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```binom.test()``` del paquete **```stats```* de $\color{blue}{\textsf{R}}$, ya que el test del signo se puede ver como un caso particular del test binomial, llegando al siguiente resultado:
+
+```{r}
+# Parámetros importantes =============================================
+exitos <- 12        # Número de veces que ocurrió el evento 'siete'.
+ensayos <- 15       # Número de lanzamientos o ensayos realizados.
+prob_teorica <- 0.5 # Probabilidad teórica de que el evento de interés 
+                    # suceda en 180 ensayos
+
+# Función ============================================================
+binom.test(x = exitos, n = ensayos, p = prob_teorica,
+           alternative = 'two.sided')
+```
+
+Como se observa, $V_p = 0.0351 < 0.05 = \alpha$, por lo que se rechaza la hipótesis nula y se deriva la misma conclusión que con los cálculos manuales.
+
+# Punto siete
+
+```{r, include = FALSE}
+rm(list = ls())
+```
+
+
+* ***Enunciado.*** Ciento treinta y cinco ciudadanos fueron seleccionados al azar y se les pidió que expresaran su opinión sobre la política exterior de los Estados Unidos. $43$ se opusieron a la política exterior. Después de varias semanas, durante las cuales recibieron un boletín informativo, se volvió a pedir su opinión, encontrando que $37$ se opusieron y $30$ de las $37$ personas originalmente estaban a favor de la política experir de los Estados Unidos. ¿Es este un cambio significativo? Usar un nivel de significancia del cinco por ciento e interpretar.
+
+Para poder evaluar si el cambio en la opinión de los ciudadanos sobre la política exterior de los Estados Unidos se puede considerar significativo se va a emplear el ***test de McNemar*** de significancia de cambios. Así, sea $X_i$ la opinión del $i$-ésimo ciudadano muestreado sobre la política exterior de los Estados Unidos antes de recibir el boletín informativo y sea $Y_i$ la opinión sobre la política exterior de los Estados Unidos del mismo ciudadano después de haber recibido el boletín informativo. Se tiene que $i = 1, \ \dots, \ 135$. Entonces, de acuerdo a la información dada, se puede construir la tabla 3.
+
+|       |           | $Y_i$    | Después   |       |
+|-------|-----------|----------|-----------|-------|
+|       |           | A favor  | En contra | Total |
+| $X_i$ | A favor   | $a = 62$ | $b = 30$  | 92    |
+| Antes | En contra | $c = 36$ | $d = 7$   | 43    |
+|       | Total     | 98       | 37        | 135   |
+
+: Esquema del cambio de opinión de los ciudadanos encuestados sobre su opinión respecto a la política exterior de los Estados Unidos antes y después de haber recibido un boletín informativo.
+
+Es importante observar que $a$ denota a los ciudadanos que siempre estuvieron a favor de la política exterior de los Estados Unidos, $b$ denota a los ciudadanos que inicialmente estuvieron a favor pero después de leer el boletín informativo estuvieron en contra, $c$ es la cantidad de ciudadanos que originalmente estaban en contra de la política exterior de los Estados Unidos y más adelante estuvieron a favor y, por último, se denota con $d$ al número de ciudadanos muestrados que siempre estuvieron en contra.
+
+
+- **Hipótesis**
+
+Para estudiar si han ocurrido cambios en la opinión que puedan etiquetarse como significativos desde el punto de vista de la estadística, se van a contrastar las siguientes dos hipótesis usando un nivel de significancia del cinco por ciento:
+
+$$
+\begin{cases}
+  H_0: \ Los \ ciudadanos \ a \ favor \ de \ la \ politica \ exterior \ de \ los \ EE.UU. \ no \ cambian \ de \ opinion \\ despues \ del \ boletin \ informativo \\
+  H_1: \ Luego \ del \ boletin \ informativo, \ hay \ un \ mayor \ cambio \ en \ contra \ de \ la \ politica \ exterior \\ de \ los \ EE.UU. \ que \ a \ favor.
+\end{cases}
+$$
+
+- **Estadístico de prueba**
+
+Teniendo en cuenta que $b + c = 30 + 36 = 66 > 20$, entonces el estadístico de prueba es:
+
+$$
+T_1 = \frac{(b-c)^2}{b+c}
+$$
+
+Si bien es posible emplear un factor de corrección, por lo que se obtendría:
+
+$$
+T_1 = \frac{(b-c-1)^2}{b+c}
+$$
+
+Bajo la hipótesis nula, se cumple que $T_1 \sim  \chi^2(1)$
+
+- **Región crítica**
+
+La región crítica para este contraste de hipótesis viene dada por:
+
+$$
+R_c = \{T_1 \ | \ T_1 \geq \chi_{1-\alpha}^2 (1) \}
+$$
+Donde $\chi_{1-\alpha}^2 (1)$ es el cuantil de una distribución $\chi^2$ con un grado de libertad que deja un área a la izquierda de $1-\alpha$. Asimismo, es posible usar un valor p, el cual se define como sigue:
+
+$$
+V_p = P(T_1 \geq T_{{1}_{obs}})
+$$
+- **Cálculo**
+
+Usando el valor p:
+
+- - *Usando factor de corrección*
+
+$$
+T_1 = \frac{(b-c-1)^2}{b+c} = \frac{(30-36-1)^2}{30+36} = \frac{49}{66} \approx 0.7424
+$$
+```{r}
+t_11 <- 49/66
+V_p1 <- pchisq(49/66, df = 1, lower.tail = FALSE)
+V_p1
+```
+
+
+- - *Sin usar factor de corrección*
+
+$$
+T_1 = \frac{(b-c)^2}{b+c} = \frac{(30-36)^2}{30+36} = \frac{6}{11} \approx 0.5455
+$$
+
+
+```{r}
+t_12 <- 6/11
+V_p2 <- pchisq(t_12, df = 1, lower.tail = FALSE)
+V_p2
+```
+
+
+Como se puede ver, en ambos casos se tiene que el $V_p > 0.05 = \alpha$, de forma que no se rechaza la hipótesis nula, lo cual implica que hay evidencia muestral suficiente para sugerir que los ciudadanos no cambian de forma significativa su opinión respecto a la política exterior de los Estados Unidos después de haber recibido el boletín informativo, con una significancia de $\alpha = 0.05$.
+
+## Implementación en $\color{blue}{\textsf{R}}$
+
+Es posible verificar los cálculos anteriores al emplear la función ```mcnemar.test()``` del paquete **```stats```* de $\color{blue}{\textsf{R}}$, llegando al siguiente resultado:
+
+```{r}
+# Parámetros importantes =============================================
+antes <- c(rep('A favor', 92),
+           rep('En contra', 43))
+despues <- c(rep('A favor', 62),
+             rep('En contra', 37),
+             rep('A favor', 36))
+
+# Función ============================================================
+mcnemar.test(antes, despues, correct = FALSE)
+```
+
+Y como se observa, $V_p > 0.05$, lo que muestra que el resultado es consistente.
