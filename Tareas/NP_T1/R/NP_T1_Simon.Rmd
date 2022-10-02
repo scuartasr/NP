@@ -233,6 +233,7 @@ prob_teorica <- 0.5 # Probabilidad teórica de que el evento de interés
 binom.test(x = exitos, n = ensayos, p = prob_teorica,
            alternative = 'less')
 ```
+
 Nótese que el valor p en este caso es $V_p = 0.9995 > 0.10 = \alpha$, por lo que el resultado es consistente con el obtenido de forma manual.
 
 # Punto cuatro
@@ -461,7 +462,7 @@ rm(list = ls())
 ```
 
 
-* ***Enunciado.*** Ciento treinta y cinco ciudadanos fueron seleccionados al azar y se les pidió que expresaran su opinión sobre la política exterior de los Estados Unidos. $43$ se opusieron a la política exterior. Después de varias semanas, durante las cuales recibieron un boletín informativo, se volvió a pedir su opinión, encontrando que $37$ se opusieron y $30$ de las $37$ personas originalmente estaban a favor de la política experir de los Estados Unidos. ¿Es este un cambio significativo? Usar un nivel de significancia del cinco por ciento e interpretar.
+- ***Enunciado.*** Ciento treinta y cinco ciudadanos fueron seleccionados al azar y se les pidió que expresaran su opinión sobre la política exterior de los Estados Unidos. $43$ se opusieron a la política exterior. Después de varias semanas, durante las cuales recibieron un boletín informativo, se volvió a pedir su opinión, encontrando que $37$ se opusieron y $30$ de las $37$ personas originalmente estaban a favor de la política experir de los Estados Unidos. ¿Es este un cambio significativo? Usar un nivel de significancia del cinco por ciento e interpretar.
 
 Para poder evaluar si el cambio en la opinión de los ciudadanos sobre la política exterior de los Estados Unidos se puede considerar significativo se va a emplear el ***test de McNemar*** de significancia de cambios. Así, sea $X_i$ la opinión del $i$-ésimo ciudadano muestreado sobre la política exterior de los Estados Unidos antes de recibir el boletín informativo y sea $Y_i$ la opinión sobre la política exterior de los Estados Unidos del mismo ciudadano después de haber recibido el boletín informativo. Se tiene que $i = 1, \ \dots, \ 135$. Entonces, de acuerdo a la información dada, se puede construir la tabla 3.
 

@@ -1,0 +1,68 @@
+---
+output:
+  pdf_document: default
+  html_document: default
+---
+# Punto 2 . Test binomial
+
+Test cola izquierda
+
+$$\left\lbrace\begin{array}{c} H_0 : P\geq0.6 \\ H_1: P < 0.6 \end{array}\right. $$
+Donde P es la proporción de residentes a favor de la emisión de un bono, la muestra aleatoria dio los siguientes resultados:
+
+| N° de personas a favor | N° de personas en desacuerdo |
+|:----------------------:|:----------------------------:|
+|           48           |              52              |
+
+Para implemetar el Test binomial de cola izquierda se considerara un éxito que la persona este a favor de la emisión del bono, por lo tanto el estadístico de prueba que corresponde al número de éxitos es:
+
+$$T = 48$$
+
+Para decir si la afirmación es cierta se calcula primero demas valores necesarios para construir la región de rechazo:
+
+$$R_c=  \{  T~|~ T \leq t\}$$
+
+donde t 
+
+```{r include=TRUE , echo=TRUE}
+t<-qbinom(0.05,100,0.6)
+t
+```
+usando esta región de rechazo como T = 48 $\leq$ t = 52 se rechaza la hipotesis nula y se concluye que el reporte del grupo cívico no es razonable; no esta demas calcular el valor-P del test:
+
+$$P \biggl( Z\leq \frac{T-nP^*+0.5}{\sqrt{nP^*(1-P^*)}} \biggl)$$
+
+```{r include=TRUE , echo=TRUE}
+pv<-pnorm((48-100*0.6+0.5)/(sqrt(100*0.6*0.4)))
+pv
+```
+# Punto 5 - Test del signo.
+
+Usando este test se quiere verificar si es igual la probabilidad de obtener un par clasificado con "+" a tener un par clasificado como "-", en este caso se definirá un par como "+" si en el lote de hormigón el aditivo B es evaluado como más duradero contra el Aditivo A, en caso contrario el par se clasificará como "-".
+
+
+$$\left\lbrace\begin{array}{c} H_0: P(+)=P(-)~ ~\forall(X_i,Y_i)  \\ H_1:P(+)\neq P(-) ~\textrm{para algún i} \end{array}\right. $$
+
+El estadístico de prueba será el número de pares clasificados como "+", que en este caso es T = 23; la región de rechazo con un nivel de significancia $\alpha$=0.05 es:
+
+$$R_c=  \{  T~|~ T \leq t~ \textrm{ó }~ T \geq n - t\} ~\textrm{con}~ t \thickapprox \frac{n}{2}-\sqrt{n}$$
+
+se calcula t así:
+
+```{r}
+n<-100
+t<-n/2-sqrt(n)
+t
+```
+
+Como T= 23 $\leq$ t = 40 el estadístico de prueba cae en la región de rechazo, con lo que se concluye que si existen diferencias significativas entre los efectos de los aditivos; no esta de mas calcular el valor-P del test:
+
+ $$\textrm{Valor-P} = 2\textrm{min}\{ P(Y > T_{cal} ), P(Y < T_{cal}) \} ~\textrm{con}~Y\sim bin(100,1/2)$$
+
+```{r}
+p1<-pbinom(23,100,1/2,lower.tail = F)
+p2<-pbinom(22,100,1/2)
+vp<-2*min(p1,p2)
+vp
+```
+Con un valor P más pequeño que cualquier nivel de significancia, se rechaza con mayor confianza la hipótesis nula.

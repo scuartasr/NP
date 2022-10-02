@@ -1,0 +1,134 @@
+---
+title: "Tarea 1"
+author: "José Manuel Pérez"
+date: "2022-09-05"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## 1.
+En un juego se lanzó un par de dados 180 veces de las cuales se produjo el evento "siete" 38 veces, si los dados no están cargados, la probabilidad de sacar "siete" es 1/6, si se cargan la probabilidad es mayor, hay evidencia muestral para sugerir que los dados están cargados?. Use a = 0.05. Interprete.
+
+\noindent
+Para este ejercicio que se quiere probar si los dados están cargados se usará el test de la binomial cuando $n >20$, la pregunta del problema, nos da a concluir que será un test de cola de derecha, entonces se tiene:
+
+\textbf{n: Tamaño de la muestra}=180
+
+\textbf{x: Número de exitos}=38
+
+Las hipótesis a probar serán las siguientes:
+
+
+$$H0:P=\frac{1}{6}$$
+$$H1:P>\frac{1}{6}$$
+Entonces como estadístico de prueba se tiene:
+$$T=38$$
+Donde:
+$Rc = {T/T > t}.\text{ t es tal que}\ P(Y > t) \leq \alpha,\text{ donde} \ Y\sim(n,p^*)$
+
+Como $n > 20$, para el valor-P tenemos que:
+
+$$P(Y\geq t_{obs})\approx 1-P(Z\leq \frac{t_{obs}-n\cdot p^*-0.5}{\sqrt{n\cdot p^*(1-p^*)}})$$
+
+Reemplazando se tiene que:
+$$P(Y\geq t_{obs})\approx 1-P(Z\leq \frac{38-180\cdot \frac{1}{6}-0.5}{\sqrt{180\cdot \frac{1}{6}(1-\frac{1}{6})}})=1-P(Z\leq 1.5)=0.0668072$$
+Como Valor-P=$0.0668072 \approx 0.067 > \alpha = 0.05$, no se rechaza $H0$, y podemos concluir que no hay evidencia muestral para sugerir que los dados están cargados.
+
+```{r,results='hide'}
+(38-180*1/6-0.5)/(sqrt(180*1/6*(1-1/6)))
+1-pnorm(1.5)
+```
+\newpage
+Realizando el cálculo de la prueba de hipótesis utilizando el R con la función de **binom.test**, obtenemos lo siguiente:
+```{r}
+binom.test(x=38,n=180,p=1/6,alternative = "greater",conf.level = 0.95)
+```
+El valor-P no coincide con el anterior, pero no difieren por mucho permitiendo
+concluir lo mismo que arriba.
+
+
+## 7.
+Ciento treinta y cinco ciudadanos fueron seleccionados al azar y se les pidió que expresaran su opinión sobre la política exterior de EEUU, 43 se opusieron a la politica exterior. Después de varias semanas, durante las cuales recibieron un boletín informativo, se les volvió a pedir su opinión, 37 se opusieron y 30 de las 37 personas originalmente estaban a favor de la política exterior de los EEUU. Es este cambio significativo? use $\alpha = 0.05$. Interprete.
+
+Como lo que se busca es un cambio significativo, se empleara el uso del test de mcnemar de significancia de cambios.
+
+Como hipótesis se tiene que:
+
+$\bullet$ $P_b$, proporción de personas antes de la opocisión
+
+$\bullet$ $P_c$, proporción de personas antes de la opocisión
+
+$$H0:P_b=P_c$$
+$$H1:P_b\neq P_c$$
+
+Entonces se realizó una tabla de contigencia 2x2 para observar mejor las frecuencias las personas:
+\begin{center}
+\begin{tabular}{|l|cc|c|}
+\hline
+\multicolumn{1}{|c|}{\textbf{}} & \multicolumn{2}{c|}{\textbf{Después}}                                              & \multicolumn{1}{l|}{\textbf{}}      \\ \hline
+\textbf{Antes}                  & \multicolumn{1}{l|}{\textbf{Opuestos}} & \multicolumn{1}{l|}{\textbf{No opuestos}} & \multicolumn{1}{l|}{\textbf{Total}} \\ \hline
+\textbf{Opuestos}    & \multicolumn{1}{c|}{7}  & 36 & 43  \\ \hline
+\textbf{No opuestos} & \multicolumn{1}{c|}{30} & 62 & 92  \\ \hline
+\textbf{Total}       & \multicolumn{1}{c|}{37} & 98 & 135 \\ \hline
+\end{tabular}
+\end{center}
+
+
+De la tabla anterior se observa que $t_1 = 36 + 30\ \text{y}\ m1 = 36^*$, por lo tanto:
+
+$$McNemar_{con-corrección}=\frac{(|2m_1-t_1|-1)^2}{t_1}=\frac{(|2\cdot36-66|-1)^2}{66}=0.3787879$$
+$$McNemar_{sin-corrección}=\frac{(2m_1-t_1)^2}{t_1}=\frac{(2\cdot36-66)^2}{66}=0.5454545$$
+
+
+```{r,results='hide'}
+(abs(2*36-66)-1)^2/66
+(2*36-66)^2/66
+qchisq(0.95,1)
+```
+En ambos casos, si se compara con $\chi^2_{(1)}(0,05) = 3,8415$, NO se rechaza H0 y se
+concluye que no se tiene evidencia para concluir que el cambio en el número de personas que se oponen a la política exterior de los EE. UU antes, sea significativo.
+
+\newpage
+Ahora se desarrolla el test utilizando el R y se tiene que:
+```{r}
+x<-matrix(c(7,30,36,62),nrow=2)
+x
+```
+\textbf{Mcnemar con correción:}
+```{r}
+mcnemar.test(x=x,y=NULL,correct=TRUE)
+```
+\textbf{Mcnemar sin correción:}
+```{r}
+mcnemar.test(x=x,y=NULL,correct=FALSE)
+```
+Se concluye lo mismo que arriba, ya que el estadístico de prueba dio lo mismo desarrollandolo paso por paso, además de que tambien se puede confirmar lo dicho antes con el valor-P obtenido de cada prueba. 
+
+
+Desarrollandolo de la otra forma se tiene que:
+$$H0:P_b=P_c$$
+$$H1:P_b\neq P_c$$
+Con factor de corrección:
+$$T_1=\frac{(b-c-1)^2}{b+c}=\frac{(36-30-1)^2}{36+30}=0.37879$$
+$$valor-P= P(T_1\geq 0.37879) \approx 0.5383$$
+Sin factor de corrección:
+$$T_1=\frac{(b-c)^2}{b+c}=\frac{(36-30)^2}{36+30}=0.54545$$
+$$valor-P= P(T_1 \geq 0.37879) \approx 0.4602$$
+Desarrollando los resultados en el R se tiene que
+```{r, results='hide'}
+antes= c(rep("opuestos",43),rep("nopues",92))
+despues= c(rep("opuestos",7),rep("nopues",98),rep("opuestos",30))
+```
+Con factor de corrección:
+```{r}
+mcnemar.test(antes,despues,correct=T)#sin correccion use F
+
+```
+Sin factor de corrección:
+```{r}
+mcnemar.test(antes,despues,correct=F)#sin correccion use F
+```
+
